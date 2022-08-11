@@ -1,0 +1,1 @@
+python main.py --model edsr --lr 0.0002 --decay 200-400-600-800-1000 --scale 2 --patch_size 96 --save edsr --ext bin --dir_data ../../data/SR/RGB/BIX2X3X4/pt_bin --data_train DF2K --data_test DF2K --data_range 1-3450/3551-3560 --epochs 1250 --n_thread 8 --decay_type cosine --loss 1*L1 --n_GPUs 1
