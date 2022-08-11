@@ -166,15 +166,21 @@ def calc_psnr(sr, hr, scale, rgb_range, dataset=None):
     if hr.nelement() == 1: return 0
 
     diff = (sr - hr) / rgb_range
-    if dataset and dataset.dataset.benchmark:
-        shave = scale
-        if diff.size(1) > 1:
-            gray_coeffs = [65.738, 129.057, 25.064]
-            convert = diff.new_tensor(gray_coeffs).view(1, 3, 1, 1) / 256
-            diff = diff.mul(convert).sum(dim=1)
-    else:
-        shave = scale + 6
+    # if dataset and dataset.dataset.benchmark:
+    #     shave = scale
+    #     if diff.size(1) > 1:
+    #         gray_coeffs = [65.738, 129.057, 25.064]
+    #         convert = diff.new_tensor(gray_coeffs).view(1, 3, 1, 1) / 256
+    #         diff = diff.mul(convert).sum(dim=1)
+    # else:
+    #     shave = scale + 6
+    
+    if diff.size(1) > 1:
+        gray_coeffs = [65.738, 129.057, 25.064]
+        convert = diff.new_tensor(gray_coeffs).view(1, 3, 1, 1) / 256
+        diff = diff.mul(convert).sum(dim=1)
 
+    shave = scale
     valid = diff[..., shave:-shave, shave:-shave]
     mse = valid.pow(2).mean()
 
@@ -200,9 +206,24 @@ def make_optimizer(args, target):
         kwargs_optimizer['eps'] = args.epsilon
 
     # scheduler
-    milestones = list(map(lambda x: int(x), args.decay.split('-')))
-    kwargs_scheduler = {'milestones': milestones, 'gamma': args.gamma}
-    scheduler_class = lrs.MultiStepLR
+    # milestones = list(map(lambda x: int(x), args.decay.split('-')))
+    # kwargs_scheduler = {'milestones': milestones, 'gamma': args.gamma}
+    # scheduler_class = lrs.MultiStepLR
+
+    if args.decay_type == 'step':
+        # step
+        kwargs_scheduler = {'step_size': args.lr_decay, 'gamma': args.gamma}
+        scheduler_class = lrs.StepLR
+    elif args.decay_type == 'cosine':
+        maxiter = 250#14200
+        #kwargs_scheduler = {'T_max': maxiter}
+        kwargs_scheduler = {'T_0': maxiter,'verbose':True}
+        scheduler_class = lrs.CosineAnnealingWarmRestarts
+    else:
+        # multi_step, specified by args.decay
+        milestones = list(map(lambda x: int(x), args.decay.split('-')))
+        kwargs_scheduler = {'milestones': milestones, 'gamma': args.gamma}
+        scheduler_class = lrs.MultiStepLR
 
     class CustomOptimizer(optimizer_class):
         def __init__(self, *args, **kwargs):
@@ -226,7 +247,7 @@ def make_optimizer(args, target):
             self.scheduler.step()
 
         def get_lr(self):
-            return self.scheduler.get_lr()[0]
+            return self.scheduler.get_last_lr()[0]
 
         def get_last_epoch(self):
             return self.scheduler.last_epoch

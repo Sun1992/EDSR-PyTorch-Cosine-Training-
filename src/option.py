@@ -9,7 +9,7 @@ parser.add_argument('--template', default='.',
                     help='You can set various templates in option.py')
 
 # Hardware specifications
-parser.add_argument('--n_threads', type=int, default=6,
+parser.add_argument('--n_threads', type=int, default=12,
                     help='number of threads for data loading')
 parser.add_argument('--cpu', action='store_true',
                     help='use cpu only')
@@ -19,7 +19,7 @@ parser.add_argument('--seed', type=int, default=1,
                     help='random seed')
 
 # Data specifications
-parser.add_argument('--dir_data', type=str, default='../../../dataset',
+parser.add_argument('--dir_data', type=str, default='/home/yulun/data/SR/RGB/img/BIX2X3X4',
                     help='dataset directory')
 parser.add_argument('--dir_demo', type=str, default='../test',
                     help='demo image directory')
@@ -67,7 +67,8 @@ parser.add_argument('--dilation', action='store_true',
 parser.add_argument('--precision', type=str, default='single',
                     choices=('single', 'half'),
                     help='FP precision for test (single | half)')
-
+parser.add_argument('--pixelunshuffle_scale', type=int, default=2,
+                    help='downsample scaling')
 # Option for Residual dense network (RDN)
 parser.add_argument('--G0', type=int, default=64,
                     help='default number of filters. (Use in RDN)')
@@ -87,7 +88,7 @@ parser.add_argument('--reset', action='store_true',
                     help='reset the training')
 parser.add_argument('--test_every', type=int, default=1000,
                     help='do test per every N batches')
-parser.add_argument('--epochs', type=int, default=300,
+parser.add_argument('--epochs', type=int, default=1300,
                     help='number of epochs to train')
 parser.add_argument('--batch_size', type=int, default=16,
                     help='input batch size for training')
@@ -103,8 +104,12 @@ parser.add_argument('--gan_k', type=int, default=1,
 # Optimization specifications
 parser.add_argument('--lr', type=float, default=1e-4,
                     help='learning rate')
+parser.add_argument('--lr_decay', type=int, default=200,
+                    help='learning rate decay per N epochs')
+parser.add_argument('--decay_type', type=str, default='step1',
+                    help='learning rate decay type') 
 parser.add_argument('--decay', type=str, default='200',
-                    help='learning rate decay type')
+                    help='learning rate decay type, multiple_step, 200-400-600-800-1000')
 parser.add_argument('--gamma', type=float, default=0.5,
                     help='learning rate decay factor for step decay')
 parser.add_argument('--optimizer', default='ADAM',
